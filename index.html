@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <link rel="stylesheet" 
+    href="https://unpkg.com/leaflet@1.8.0/dist/leaflet.css" 
+    integrity="sha512-hoalWLoI8r4UszCkZ5kL8vayOGVae1oxXe/2A4AO6J9+580uKHDO3JdHb7NzwwzK5xr/Fs0W40kiNHxM9vyTtQ==" 
+    crossorigin="" />
+  
+  <script 
+    src="https://unpkg.com/leaflet@1.8.0/dist/leaflet.js" 
+    integrity="sha512-BB3hKbKWOc9Ez/TAwyWxNXeoV9c1v6FIeYiBieIWkpLjauysF18NzgR1MBNBXf8/KABdlkX68nAhlwcDFLGPCQ==" 
+    crossorigin="">
+  </script>
+
+  <style>
+    #issMap {
+      height: 180px;
+    }
+  </style>
+  <title>Fetch data for ISS location on map</title>
+</head>
+<body>
+
+  <h1>Where is the ISS?</h1>
+
+  <p>
+    latitude:<span id="lat"></span>°<br/>
+    longitude:<span id="lon"></span>°<br/>
+  </p>
+
+  <!-- here we put a map -->
+
+  <div id="issMap""></div>
+
+  <script>
+    //making a map and bind it with id in div
+
+    const mymap = L.map('issMap').setView([0, 0], 1);
+
+    //attribution of Map 
+
+    const attribution =
+      '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
+    
+      const api_url = 'https://api.wheretheiss.at/v1/satellites/25544';
+    
+    // making a tiles
+
+    const tileUrl = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+
+    const tiles = L.tileLayer(tileUrl, { attribution });
+    tiles.addTo(mymap);
+    
+    //making an icon
+
+    const issIcon = L.icon({
+      iconUrl: 'issIcon.png',
+      iconSize: [50, 32],
+      iconAnchor: [25, 16]
+    });
+
+    //Make a marker and put icon
+
+    const marker = L.marker([0, 0], {icon: issIcon} ).addTo(mymap);
+
+    // set variable wit "true" for not to refresh map in default position with zoom
+   let firestTime = true;
+// function is fetch a data and put it in a marker coordiantes
+    async function getISS() {
+      const response = await fetch(api_url)
+      const data = await response.json()
+
+      //destruction of income data on two parameters 
+
+      const {latitude, longitude } = data;
+
+      //put coordinates in to marker
+      marker.setLatLng([latitude, longitude]);
+
+      // use variable and set setView as false not to using with variable next time after zooming 
+      if (firestTime) {
+      mymap.setView([latitude, longitude], 3)
+      firestTime = false;
+      }
+      // make a text information about coorditants 
+      
+      document.getElementById('lat').textContent = latitude.toFixed(2);
+      document.getElementById('lon').textContent = longitude.toFixed(2);
+    }
+
+    getISS();
+  
+    //using setInterval for refreshing a map on 1 sec
+    setInterval(getISS, 1000)
+
+  </script>
+</body>
+</html>
